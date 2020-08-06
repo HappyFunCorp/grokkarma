@@ -90,7 +90,7 @@ router.get('/full', async function(req, res, next) {
 /* GET account details */
 router.get('/url/:url', async function(req, res, next) {
   var url = req.params.url;
-  if (!req.session.urls.include(url) req.session.urls.include(process.env.ADMIN_URL)) {
+  if (!req.session.urls.include(url) && !req.session.urls.include(process.env.ADMIN_URL)) {
     util.warn("Not authorized", req.params.url);
     return res.json({"success":false, "error": req.t("Not authorized")});
   }
@@ -280,7 +280,6 @@ router.post('/token/set', function(req, res, next) {
   // handle new API token
   util.debug("post token session", req.session);
   res.json({"success":true});
-  });
 });
 
 

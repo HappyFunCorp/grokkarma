@@ -101,31 +101,26 @@ environment variables; the local environment simply uses `.env` files.
 
 So, to get the Node API up and running locally:
 
-1. If you haven't already, get the JSON file containing your Firebase service account'
-credentials per the [Firebase documentation](https://firebase.google.com/docs/admin/setup)
-and save that file as `.firebase.json` inside the "server" top-level directory for this project
+1. Copy the `.example.env.development` file in the "server" top-level directory to `.env`
+2. Edit the values there per your needs. In particular, *change the admin URL to your URL*.
+3. Open a shell and run `ganache-cli -u 0` as above.
 
-2. Copy the `.example.env.development` file in the "server" top-level directory to `.env`
-3. Edit the values there per your needs. In particular, *change the admin email to your email address*.
-4. Note that the Sendgrid API key goes there too, if you want to be able to send emails.
-5. Open a shell and run `ganache-cli -u 0` as above.
-
-6. Open another shell, navigate to the "ethereum" top-level directory of this
+4. Open another shell, navigate to the "ethereum" top-level directory of this
 repo, and run `truffle deploy` (this should compile and write the smart
 contracts, again, and write the address of the resulting YKarma interface
 contract to `server/.env` for use by the Node code.)
 
-7. If you want to run the automated tests locally, instead run
+5. If you want to run the automated tests locally, instead run
 `TRUFFLE_ENV=test truffle deploy`, which populates the blockchain with a few
 test accounts and rewards subsequently assumed by the API test code.
 
-8. Open a third shell, navigate to the "server" top-level directory of this
-repo, and run `npm run test` to get the API running in test mode
+6. Open a third shell, navigate to the "server" top-level directory of this
+repo, run `npm install`, and then run `npm run test` to run the API in test mode
 
-9. Open a fourth shell, navigate to the "server" top-level directory of this
+7. Open a fourth shell, navigate to the "server" top-level directory of this
 repo, and run `mocha` to run the API tests. They should pass.
 
-10. Once you've established that tests are passing, stop all of those,
+8. Once you've established that tests are passing, stop all of those,
 restart ganache, run `truffle deploy` without TRUFFL_ENV set, and run `npm
 start` rather than `npm run test`. Voila! The API runs locally on port 3001.
 
