@@ -43,7 +43,7 @@ router.get('/vended', function(req, res, next) {
 /* GET rewards owned list */
 router.get('/ownedBy/:accountId', function(req, res, next) {
   const ownerId = parseInt(req.params.accountId);
-  if (req.session.ykid !== ownerId && req.session.email !== process.env.ADMIN_EMAIL) {
+  if (req.session.ykid !== ownerId && !req.session.urls.includes(process.env.ADMIN_URL)) {
     util.log("not allowed to get rewards owned by", ownerId);
     return res.json({"success":false, "rewards":[]});
   }

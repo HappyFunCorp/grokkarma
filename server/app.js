@@ -12,7 +12,6 @@ var indexRouter = require('./routes/index');
 var accountsRouter = require('./routes/accounts');
 var rewardsRouter = require('./routes/rewards');
 var communitiesRouter = require('./routes/communities');
-var slackRouter = require('./routes/slack');
 
 var app = express();
 
@@ -54,7 +53,6 @@ app.use('/api', indexRouter);
 app.use('/api/accounts', accountsRouter);
 app.use('/api/communities', communitiesRouter.router);
 app.use('/api/rewards', rewardsRouter.router);
-app.use('/api/slack', slackRouter.router);
 
 console.log("hostname", os.hostname());
 console.log("ykarma", process.env.YKARMA_ADDRESS);

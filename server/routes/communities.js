@@ -40,7 +40,7 @@ router.get('/:id', async function(req, res, next) {
 /* GET account list */
 router.get('/:communityId/accounts', async function(req, res, next) {
   const communityId = parseInt(req.params.communityId);
-  if (req.session.email !== process.env.ADMIN_EMAIL && req.session.ykcid !== communityId) {
+  if (!req.session.urls.includes(process.env.ADMIN_URL) && req.session.ykcid !== communityId) {
     util.log("not allowed to get accounts for", communityId);
     return res.json([]);
   }
@@ -84,7 +84,7 @@ router.get('/:id/leaderboard', function(req, res, next) {
 /* POST new community. */
 router.post('/create', async function(req, res, next) {
   console.log("session", req.session);
-  if (req.session.email !== process.env.ADMIN_EMAIL) {
+  if (!req.session.urls.includes(process.env.ADMIN_URL)) {
       return res.json({"success":false, "error": req.t("Not authorized")});
   }
   var community = req.body.community;
@@ -118,7 +118,7 @@ router.post('/create', async function(req, res, next) {
 router.put('/update', async function(req, res, next) {
   var community = req.body.community;
   community.flags = community.strict ? '0x0000000000000000000000000000000000000000000000000000000000000001' : BYTES_ZERO;
-  if (req.session.email !== process.env.ADMIN_EMAIL) {
+  if (!req.session.urls.includes(process.env.ADMIN_URL)) {
       return res.json({"success":false, "error": req.t("Not authorized")});
   }
   util.log("community update", JSON.stringify(community));
@@ -143,7 +143,7 @@ router.put('/update', async function(req, res, next) {
 
 /* DELETE remove community. */
 router.delete('/:id', async function(req, res, next) {
-  if (req.session.email !== process.env.ADMIN_EMAIL) {
+  if (!req.session.urls.includes(process.env.ADMIN_URL)) {
       return res.json({"success":false, "error": req.t("Not authorized")});
   }
   if (req.params.id === 0) {
@@ -169,7 +169,7 @@ async function getAccountWithinCommunity(communityId, idx, callback) {
 }
 
 function hasNeverLoggedIn(account) {
-  let noSlackUrl = !account.urls || account.urls.indexOf("slack:") < 0;
+  let noSlackUrl = (account.urls || '').indexOf("slack:") >= 0;
   let noWebLogin = account.flags === '0x0000000000000000000000000000000000000000000000000000000000000001';
   return account.id === 0 || (noWebLogin && noSlackUrl);
 }

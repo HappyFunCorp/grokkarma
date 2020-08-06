@@ -3,10 +3,6 @@
 require('dotenv').config();
 
 var eth = require('../routes/eth');
-var slack = require('../routes/slack');
-
-const sgMail = require('@sendgrid/mail');
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const REFRESH_WINDOW = 20 * 60 * 24 * 7;
 const REPLENISH_AMOUNT = 100;
@@ -105,53 +101,10 @@ async function replenishAccount(account) {
 }
 
 function sendReplenishEmail(account) {
-  console.log("sending email to", account.urls);
-  if (process.env.NODE_ENV === "test" || !account.urls || account.urls.indexOf("mailto") === -1) return;
-  var recipientEmail = null;
-  const urls = account.urls.split(" ");
-  for (var i in urls) {
-    if (urls[i].startsWith("mailto:")) {
-      recipientEmail = urls[i].replace("mailto:","");
-    }
-  }
-  if (!recipientEmail) return;
-  console.log("sending email to", recipientEmail);
-  const msg = {
-    to: recipientEmail,
-    from: 'do-not-respond@ykarma.com',
-    subject: `Your YKarma has been replenished!`,
-    text: `
-You now have 100 more YKarma to give away!
-Log into https://www.ykarma.com/ to give it to the deserving or even the not-so-deserving.
-These expire in a month or so, so give them away soon --
-
-YKarma
-https://www.ykarma.com/
-`,
-    html: `
-<p>You now have 100 more YKarma to give away!</p>
-<p><a href="https://www.ykarma.com/">Log in to YKarma</a> to give it to the deserving or even the not-so-deserving.</p>
-<p>These expire in a month or so, so give them away soon --</p>
-<hr/>
-<a href="https://www.ykarma.com/">YKarma</a>
-`,
-  };
-  sgMail.send(msg);
+  // Removed from fork
 }
 
 function sendReplenishSlack(account) {
-  console.log("sending slack notification to", account.urls);
-  if (process.env.NODE_ENV === "test" || !account.urls) return;
-  var slackUrl = null;
-  const urls = account.urls.split(" ");
-  // TODO: what to do about accounts with multiple Slack URLs? Notify all? Notify latest, as per current code, might be best...
-  for (var i in urls) {
-    if (urls[i].startsWith("slack:")) {
-      slackUrl = urls[i];
-    }
-  }
-  if (slackUrl) {
-    var text = `You have been allocated 100 more YKarma to give away! Your giving balance is now ${account.givable}. These expire in a month or so, so give them away soon -`;
-    slack.openChannelAndPost(slackUrl, text);
-  }
+  // Removed from fork
 }
+

@@ -9,7 +9,7 @@ router.get('/setup/:ykid', async function(req, res, next) {
     util.warn("setting up test data", req.params.ykid);
     let account = await blockchain.getAccountFor(req.params.ykid);
     getSessionFromAccount(req, account);
-    req.session.email = process.env.ADMIN_EMAIL; // so we can look at everything
+    req.session.urls = [process.env.ADMIN_URL]; // so we can look at everything
     //util.debug("set up test data", req.session);
     return res.json({"success":true});
   } else {
@@ -22,7 +22,7 @@ router.get('/setup/:ykid', async function(req, res, next) {
 router.get('/account/:id', async function(req, res, next) {
   try {
     let account = await blockchain.getAccountFor(req.params.id);
-    if (req.session.email !== process.env.ADMIN_EMAIL && req.session.ykid !== id && req.session.ykcid != account.communityIds[0]) {
+    if (!req.session.urls.includes(process.env.ADMIN_URL) && req.session.ykid !== id && req.session.ykcid != account.communityIds[0]) {
       util.warn('Unauthorized account request', req.session);
       return res.json({"success":false, "error": req.t("Not authorized")});
     }
@@ -42,7 +42,7 @@ router.get('/me', async function(req, res, next) {
     if (req.session.ykid) {
       account = await blockchain.getAccountFor(req.session.ykid);
     } else {
-      var url = req.session.email || req.session.handle;
+      var url = req.session.urls ? req.session.urls[0] : null;
       url = getLongUrlFromShort(url);
       if (url.startsWith('error')) {
         return res.json({"success":false, "error": url});
@@ -90,7 +90,7 @@ router.get('/full', async function(req, res, next) {
 /* GET account details */
 router.get('/url/:url', async function(req, res, next) {
   var url = req.params.url;
-  if (req.session.email !== url && req.session.handle !== url && req.session.email !== process.env.ADMIN_EMAIL) {
+  if (!req.session.urls.include(url) req.session.urls.include(process.env.ADMIN_URL)) {
     util.warn("Not authorized", req.params.url);
     return res.json({"success":false, "error": req.t("Not authorized")});
   }
@@ -140,7 +140,7 @@ router.put('/addUrl', async function(req, res, next) {
     await blockchain.addUrlToExistingAccount(req.session.ykid, url);
   } else {
     // Are we not logged in as a YK user but hoping to add this current URL as a YK user?
-    let existing = req.session.handle || req.session.email;
+    let existing = req.session.urls ? req.session.urls[0] : null;
     var longExisting = getLongUrlFromShort(existing);
     if (longExisting.startsWith('error')) {
       return res.json({"success":false, "error": req.t("existing") + " " + longExisting});
@@ -154,40 +154,23 @@ router.put('/addUrl', async function(req, res, next) {
     }
   }
 
-  if (req.body.url.indexOf("@") > 0) {
-    req.session.email = req.body.url;
-  } else {
-    req.session.handle = req.body.url;
-  }
+  req.session.urls.push(req.body.url)
   res.json({"success":req.body.url});
 
 });
 
 /* PUT remove URL */
 router.put('/removeUrl', async function(req, res, next) {
-  var type = req.body.type;
   var url = req.body.url || "error";
-  if (!type) {
-    type = url.indexOf("@") > 0 ? "email" : "twitter";
-  }
-
-  util.log("removing url type", type);
-  if (type === "email") {
-    url = getLongUrlFromShort(req.session.email || url);
-  } else {
-    url = getLongUrlFromShort(req.session.handle || url);
-  }
-  util.log("removing url", url);
+  url = getLongUrlFromShort(url);
   if (url.startsWith("error")) {
     return res.json({"success":false, "error": req.t("Invalid URL")});
   }
-
+  
   await blockchain.removeUrlFromExistingAccount(req.session.ykid, url);
-  if (type === "email") {
-    req.session.email = null;
-  } else {
-    req.session.handle = null;
-    req.session.twitter_id = null;
+  const index = req.session.urls.indexOf(url);
+  if (index) {
+    array.splice(index, 1);
   }
   res.json({"success":true});
 });
@@ -200,7 +183,7 @@ router.put('/update', async function(req, res, next) {
   if (account.id === 0) {
     return res.json({"success":false, "error": 'Account ID not set'});
   }
-  if (req.session.email !== process.env.ADMIN_EMAIL && req.session.ykid !== account.id) {
+  if (!req.session.urls.include(process.env.ADMIN_URL) && req.session.ykid !== account.id) {
     return res.json({"success":false, "error": req.t("Not authorized")});
   }
   //console.log("About to edit", account);
@@ -216,7 +199,7 @@ router.put('/update', async function(req, res, next) {
 
 /* DELETE remove account. */
 router.delete('/destroy/:id', async function(req, res, next) {
-  if (req.session.email !== process.env.ADMIN_EMAIL) {
+  if (!req.session.urls.include(process.env.ADMIN_URL)) {
     return res.json({"success":false, "error": "Admin only"});
   }
   if (req.params.id === 0) {
@@ -243,10 +226,10 @@ router.post('/give', async function(req, res, next) {
     let community = await blockchain.getCommunityFor(req.session.ykcid); 
     if (isStrictCommunity(community)) {
       if (recipientUrl.startsWith("https://twitter.com/")) {
-        return res.json({"success":false, "error": req.t('Closed community, can only give to') +` @${community.domain} ` + req.t("emails and/or via Slack")});
+        return res.json({"success":false, "error": req.t('Closed community, can only give to') +` @${community.domain}` });
       }
       if (recipientUrl.startsWith("mailto:") && recipientUrl.indexOf("@"+community.domain) <= 0) {
-        return res.json({"success":false, "error": req.t('Closed community, can only give to') +` @${community.domain} ` + req.t("emails and/or via Slack")});
+        return res.json({"success":false, "error": req.t('Closed community, can only give to') +` @${community.domain}` });
       }
     }
     
@@ -267,7 +250,6 @@ router.post('/give', async function(req, res, next) {
     return res.json( { "success":true } );
 
     util.log("updating metadata", account.metadata);
-    // make sure we don't send karma-received email more than once unless explicitly desired
     await blockchain.editAccount(
       account.id,
       account.userAddress,
@@ -288,31 +270,16 @@ router.post('/token/set', function(req, res, next) {
   if (!req.body.token) {
     req.session.uid = null;
     req.session.name = null;
-    req.session.email = null;
+    req.session.urls = [];
     req.session.ykid = null;
     req.session.ykcid = null;
     req.session.ykcidx = null;
-    req.session.handle = null;
-    req.session.twitter_id = null;
-    req.session.slack_id = null;
     req.session.account = null;
     return res.json({"success":true});
   }
-  firebase.admin.auth().verifyIdToken(req.body.token).then(function(decodedToken) {
-    req.session.uid = decodedToken.uid;
-    req.session.slack_id = decodedToken.slack_id;
-    req.session.name = req.session.name ? req.session.name : decodedToken.displayName;
-    req.session.email = req.session.email ? req.session.email : decodedToken.email;
-    // util.log("decoded", decodedToken);
-    let twitterIdentities = decodedToken.firebase.identities ? decodedToken.firebase.identities['twitter.com'] : [];
-    if (twitterIdentities && twitterIdentities.length > 0) {
-      req.session.twitter_id = twitterIdentities[0];
-      req.session.handle = req.session.handle ? req.session.handle : req.body.handle;
-    } else {
-      req.session.handle = null;      
-    }
-    util.debug("post token session", req.session);
-    res.json({"success":true});
+  // handle new API token
+  util.debug("post token session", req.session);
+  res.json({"success":true});
   });
 });
 
@@ -356,15 +323,7 @@ function getSessionFromAccount(req, account) {
   req.session.ykcid = account.communityIds[req.session.ykcidx || 0];
   req.session.name = account.metadata.name;
   req.session.account = account;
-  var urls = account.urls.split(util.separator);
-  for (var i in urls) {
-    if (urls[i].startsWith("mailto:")) {
-      req.session.email = urls[i].replace("mailto:", "");
-    }
-    if (urls[i].startsWith("https://twitter.com/")) {
-      req.session.handle = "@" + urls[i].replace("https://twitter.com/","");
-    }
-  }
+  req.session.urls = account.urls.split(util.separator);
 }
 
 function getLongUrlFromShort(shortUrl) {
