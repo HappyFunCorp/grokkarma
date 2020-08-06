@@ -2,7 +2,6 @@ const express = require('express');
 const router = express.Router();
 const blockchain = require('./blockchain');
 const util = require('./util');
-const email = require('./emails');
 
 const ADMIN_ID = 1;
 
@@ -86,7 +85,6 @@ router.post('/create', async function(req, res, next) {
   }
   var reward = req.body.reward;
   await blockchain.addNewReward(req.session.ykid, reward.cost, reward.quantity, reward.tag, JSON.stringify(reward.metadata), reward.flags);
-  email.sendRewardCreatedEmail(req, reward, req.session.account);
   util.log("reward created", reward);
   return res.json({"success":true, "result": reward});
 });
@@ -128,14 +126,7 @@ router.post('/purchase', async function(req, res, next) {
   await blockchain.purchase(req.session.ykid, req.body.rewardId);
   util.log("reward purchased", reward);
   let vendor = await blockchain.getAccountFor(reward.vendorId);
-  email.sendRewardPurchasedEmail(req, reward, req.session.account, vendor);
-  email.sendRewardSoldEmail(req, reward, req.session.account, vendor);
-  let vendorSlackUrl = util.getSlackUrlForSameTeam(vendor.urls, req.session.account.urls);
-  if (vendorSlackUrl) {
-    var buyerInfo = util.getEmailFrom(req.session.account.urls);
-    buyerInfo = buyerInfo ? buyerInfo : buyer.urls;
-    slack.openChannelAndPost(vendorSlackUrl, `You just sold the reward ${getRwardInfoFrom(reward)} to ${buyerInfo}!`);
-  }
+  // notify vendor
   return res.json({"success":true, "result": reward});
 });
 

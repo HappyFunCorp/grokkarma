@@ -1,18 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const util = require('./util');
-const email = require('./emails');
-const firebase = require('./firebase');
 const blockchain = require('./blockchain');
-
-const redisService = require("redis");
-var redis = redisService.createClient({host:"redis", port: 6379});
-redis.on('error', function (err) {
-  if (process.env.NODE_ENV === "production") {
-    console.log('Something went wrong with Redis', err);
-  }
-});
-var accountCache = {};
 
 // GET set up 
 router.get('/setup/:ykid', async function(req, res, next) {
@@ -72,7 +61,6 @@ router.get('/me', async function(req, res, next) {
     }
     util.warn("Marking account active and replenishing");
     await blockchain.markAccountActive(account);
-    redis.del(`account-${account.id}`); // clear our one redis cache
     await blockchain.replenishAccount(account.id);
     res.json(account);
   } catch(error) {
@@ -222,7 +210,6 @@ router.put('/update', async function(req, res, next) {
     JSON.stringify(account.metadata),
     account.flags || util.BYTES_ZERO
   );
-  redis.del(`account-${account.id}`); // clear our one cache
   return res.json({"success":true});
 });
 
@@ -274,27 +261,13 @@ router.post('/give', async function(req, res, next) {
     }
     var account = req.session.account || {};
     account.metadata = account.metadata || {};
-    account.metadata.emailPrefs = account.metadata.emailPrefs || {};
-    util.log("emailPrefs", account.metadata.emailPrefs);
-    let sendNonMemberEmail = account.metadata.emailPrefs[req.body.recipient] !== 0;
     let recipient = await blockchain.getAccountForUrl(recipientUrl);
     // util.debug("recipient", recipient);
     // util.debug("hasNeverLoggedIn", ""+hasNeverLoggedIn(recipient));
-    let sendEmail = hasNeverLoggedIn(recipient) ? sendNonMemberEmail : !recipient.metadata.emailPrefs || recipient.metadata.emailPrefs.kr !== 0;
-    if (!sendEmail) {
-      util.log("not sending email", account.metadata.emailPrefs);
-      return res.json( { "success":true } );
-    }
-    util.debug("sending mail to", req.body.recipient);
-    let senderName = req.session.name || req.session.email;
-    email.sendKarmaSentEmail(req, senderName, recipientUrl, req.body.amount, req.body.message, hasNeverLoggedIn(recipient));
-    if (!hasNeverLoggedIn(recipient)) {
-      return res.json( { "success":true } );
-    }
+    return res.json( { "success":true } );
 
     util.log("updating metadata", account.metadata);
     // make sure we don't send karma-received email more than once unless explicitly desired
-    account.metadata.emailPrefs[req.body.recipient] = 0;
     await blockchain.editAccount(
       account.id,
       account.userAddress,
@@ -363,7 +336,6 @@ function hydrateAccount(account) {
 }
 
 function hydrateTranche(tranche, given) {
-  // check account cache on redis
   return new Promise(async function(resolve, reject) {
     if (process.env.NODE_ENV==="test") {
       resolve();
@@ -371,34 +343,9 @@ function hydrateTranche(tranche, given) {
     let id = given ? tranche.receiver : tranche.sender;
     util.log("hydrating tranche for", id);
     let key = `account-${id}`;
-    var success = redis.get(key, async function (err, val) {
-      if (err) {
-        util.warn("redis error", err);
-      }
-      if (val && val !== '') {
-        util.debug("redis cache hit");
-        tranche.details = JSON.parse(val);
-        resolve();
-      }
-      let account = await blockchain.getAccountFor(id);
-      console.log("account", account);
-      tranche.details = { name: account.metadata.name, urls: account.urls };
-      redis.set(key, JSON.stringify(tranche.details));
-      resolve();
-    });
-  
-    // if redis not working
-    if (!success) {
-      val = accountCache[key];
-      if (val) {
-        tranche.details = JSON.parse(val);
-        resolve();
-      }
-      let account = await blockchain.getAccountFor(id);
-      tranche.details = { name: account.metadata.name, urls: account.urls };
-      accountCache[key] = JSON.stringify(tranche.details);
-      resolve();
-    }
+    let account = await blockchain.getAccountFor(id);
+    tranche.details = { name: account.metadata.name, urls: account.urls };
+    resolve();
   });
 }
 
