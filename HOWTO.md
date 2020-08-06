@@ -5,21 +5,11 @@ YKarma HOWTO
 Architectural Overview
 ----------------------
 
-This is a three-tier web app: a React/Redux front end talking to a Node API
-which in turn uses a private Geth PoA Ethereum blockchain as its datastore.
-Most of the actual business logic consists of on-chain smart contracts. It
-all (optionally) runs inside Docker containers.
+This is a Node API which in turn uses a private Geth PoA Ethereum blockchain
+as its datastore. Most of the actual business logic consists of on-chain smart
+contracts. It all (optionally) runs inside Docker containers.
 
-Only two third-party services are used: Firebase for authentication, and
-Sendgrid for email. Authentication is either via email link or Sign In With
-Twitter -- this app does not use (or store) passwords.
-
-(_update_: since the first iteration of this HOWTO, some Slack integration has
-been added to the code. This is entirely optional and does not invalidate any
-of the below; documentation for the Slack integration will be added as a
-separate file and linked to from here.)
-
-All these services have been Dockerized so that they can be launched via a
+These services have been Dockerized so that they can be launched via a
 single docker-compose statement, after the various configuration files have
 been appropriately populated. Automated integration tests exist for the smart
 contracts and the API. Details on how to build & launch the app below.
@@ -31,8 +21,6 @@ To get this code up and running locally, you're going to need:
 1. The code, obviously, cloned from this repo.
 2. [Docker](https://docs.docker.com/install/) and [docker-compose](https://docs.docker.com/compose/install/) installed locally, to run it in containers, or
 3. [Node](https://nodejs.org/en/) and [truffle](https://truffleframework.com/) installed locally, to run it directly
-4. A [new Firebase project](https://console.firebase.google.com/) with `Email/Password` enabled as [authentication provider](`https://console.firebase.google.com/project/_/authentication/providers`)
-5. A [Sendgrid](https://signup.sendgrid.com/) API key to send emails (this is not essential, skip it for quick launch)
 
 Note also that the instructions here assume a Unix environment (and it was developed in OS X) so any necessary
 operating-system adjustments are, I'm afraid, left as an exercise for the reader.
@@ -40,34 +28,19 @@ operating-system adjustments are, I'm afraid, left as an exercise for the reader
 Quick Launch with Docker
 ------------------------
 
-1. Ensure you have the prerequisites mentioned above -- Docker, docker-compose, and your new Firebase project.
+1. Ensure you have the prerequisites mentioned above.
 
-2. Populate the two Firebase config files: one for the React front end, one for the API service
-    1. Firebase configuration for React
-        1. There exists a file `web/src/fbase/example.fbase.js`
-        2. Rename it to `web/src/fbase/fbase.js`
-        3. Get the Firebase web config values per the [Firebase documentation](https://firebase.google.com/docs/web/setup)
-        4. Replace the placeholder values in the fbase.js file with those real ones.
-    2. Firebase configuration for the API service
-        1. Get the JSON file containing your Firebase service account's credentials per the [Firebase documentation](https://firebase.google.com/docs/admin/setup)
-        2. Save that file as `.firebase.json` inside the "server" top-level directory for this project
+2. Populate the YKarma configuration file for the API service
+    1. Copy the `.example.env.production` file in the "server" top-level directory to `.env.production`
+    2. Edit the values there per your needs. In particular, **change the admin URL to your email or other URL**.
 
-3. Populate the YKarma configuration files -- again, one for the React front end, one for the API service
-    1. YKarma configuration for React
-        1. Copy the `.example.env.production` file in the "web" top-level directory to `.env.production`
-        2. Edit the values there per your needs. In particular, change the admin email to your email address.
-    1. YKarma configuration for the API service
-        1. Copy the `.example.env.production` file in the "server" top-level directory to `.env.production`
-        2. Edit the values there per your needs. In particular, **change the admin email to your email address**.
-        3. Note that the Sendgrid API key goes there too, if you want to be able to send emails.
+3. Breathe a sigh of relief that the annoying config-file stuff is now done and you shouldn't need to deal with it again.
 
-4. Breathe a sigh of relief that the annoying config-file stuff is now done and you shouldn't need to deal with it again.
-
-5. Build the app with docker-compose
+4. Build the app with docker-compose
     1. From a shell in the project root directory, run `docker-compose build`
     2. Note you'll need to repeat this step after code changes for those to be promoted into the containers.
 
-6. Run the app with docker-compose
+5. Run the app with docker-compose
     1. From a shell in the project root directory, run `docker-compose up`
     2. A lot of stuff happens on first run: launching the blockchain, compiling all the smart contracts and
     migrating them into the blockchain, communicating the contract address to the API server, etc. This can
@@ -76,8 +49,8 @@ Quick Launch with Docker
     3. Open a browser and point it to "localhost"
 
 7. Profit!
-    1. Log in with your admin email
-    2. Send karma to other email addresses / Twitter handles to add them to the built-in test community
+    1. Use the API Log in with your admin URL
+    2. Send karma to other URLs to add them to the built-in test community
     3. Create rewards, purchase rewards, etc.
     4. Use this code as a basis for your own experimentation!
 
@@ -157,40 +130,19 @@ restart ganache, run `truffle deploy` without TRUFFL_ENV set, and run `npm
 start` rather than `npm run test`. Voila! The API runs locally on port 3001.
 
 
-Web Development
----------------
-
-Running the actual web site locally is fairly straightforward once you have the
-API service up and running:
-
-1. If you haven't already, rename `web/src/fbase/example.fbase.js` to `web/src/fbase/fbase.js`
-and replace its placeholder values with your Firebase web config values per the
-[Firebase documentation](https://firebase.google.com/docs/web/setup).
-
-2. Copy the `.example.env.development` file in the "web" top-level directory to `.env`
-
-3. Edit the values there per your needs. In particular, change the admin email to your email address.
-
-4. With Ganache running, the smart contracts deployed to the blockchain via
-Truffle, and the API running, open a fourth shell, navigate to the "web"
-top-level directory of this repo, and run `npm start`.
-
-
 Running Locally
 ---------------
 
 The above looks more painful and difficult than it is because of all the config
-files. Once those are set up, running locally consists of opening four shell
+files. Once those are set up, running locally consists of opening three shell
 windows and running, in this order:
 
 1. (in the "ethereum" directory) `ganache-cli -u 0`
 2. (in the "ethereum" directory) `truffle deploy`
 3. (in the "server" directory) `npm start`
-4. (in the "web" directory) `npm start`
 
-That's all. You get hot refreshes from the React code, but you'll need to
-restart both Node and React if you change the API code, and obviously you'll
-need to restart 2, 3, and 4 if you change the smart contracts.
+You'll need to restart  Node and React if you change the API code, and obviously
+you'll need to restart truffle as well if you change the smart contracts.
 
 
 In Production
@@ -204,8 +156,6 @@ above apply, along with a few other notes:
 * Again, when running under Docker the actual blockchain data is the local "geth/cbdata"
 directory, shared with and written to by Docker as a volume
 
-* To run on Linux behind Nginx, there's a line you'll want to uncomment in docker-compose.yml
-
 * If you want your site secured via TLS, you probably want to use Let's Encrypt via docker;
 here's a [good guide](https://medium.com/bros/enabling-https-with-lets-encrypt-over-docker-9cad06bdb82b)
 to doing that. If you have SSL set up, you want to replace nginx.conf in "server" with nginx.conf.https,
@@ -213,9 +163,6 @@ and there are two more lines to uncomment in docker-compose.yml
 
 * You'll want to set up a cron job to refresh users' karma every week, and another to refresh the
 Let's Encrypt cert. An example crontab for your server can be found in the "cron" directory under "server".
-
-* One gotcha on Digital Ocean: don't use their UFW firewall, as Docker containers ignore UFW rules(!)
-per https://www.digitalocean.com/community/tutorials/ufw-essentials-common-firewall-rules-and-commands
 
 
 Some Notes On The Architecture
@@ -235,14 +182,14 @@ all with a long list of blockchain transactions; or launch a new chain, copy
 the old data over, and transform it en route. Even fetching data from the chain
 can be surprisingly convoluted. Etc etc etc.
 
-I was tempted to add more abstraction layers beyond React / API / blockchain,
+I was tempted to add more abstraction layers,
 eg some kind of ORM data layer between the API and the blockchain, but the idea
 was for this to be illustrative as well as useful, so I went with just trying
 to make the code simple, readable, and straightforward.
 
 I'm a polyglot programmer and neither Javascript nor Solidity is my first or
 even my fifth language of choice (though like many I have warmed to JS over the
-years) which will probably be very apparent to serious JS/React/Node developers
+years) which will probably be very apparent to serious ode developers
 when they look at the code.
 
 If I was building this to seriously scale I ... well, I wouldn't have used a
