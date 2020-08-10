@@ -14,6 +14,7 @@ services:
       #- /root/letsencrypt/lib:/var/lib/letsencrypt #uncomment for production HTTPS
     depends_on:
       - eth
+      - redis
 
   eth:
     build: ./geth
@@ -22,3 +23,9 @@ services:
       - "8545:8545"
     volumes:
       - ./geth/cbdata:/cbdata
+
+  # just for Node web session storage, currently
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"

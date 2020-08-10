@@ -7,22 +7,10 @@ WORKDIR /usr/src/app
 # A wildcard is used to ensure both package.json AND package-lock.json are copied
 # where available (npm@5+)
 COPY ./server/package*.json ./server/
-COPY ./web/package*.json ./web/
 
 # Install the dependencies
 WORKDIR /usr/src/app/server
 RUN npm install
-WORKDIR /usr/src/app/web
-RUN npm install
-
-# Production build for React
-# TODO: production build for Firebase
-WORKDIR /usr/src/app
-COPY ./web ./web/
-RUN mv ./web/.env.production ./web/.env
-
-WORKDIR /usr/src/app/web
-RUN npm run build
 
 # Copy smart contracts, install truffle
 WORKDIR /usr/src/app
