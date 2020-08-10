@@ -51,7 +51,7 @@ describe('Account', function () {
   });
 
   it('should list accounts for a community, then switch communities', async function () {
-    this.timeout(3000);
+    this.timeout(5000);
     try {
       var res = await api.get('/api/accounts/setup/8');
         TestCookies = (res.headers['set-cookie'] || ['']).pop().split(';');
@@ -72,6 +72,7 @@ describe('Account', function () {
   });
 
   it('should update account metadata', async function () {
+    this.timeout(4000);
     try {
       var res = await api.get('/api/accounts/setup/2');
         TestCookies = (res.headers['set-cookie'] || ['']).pop().split(';');
@@ -89,7 +90,7 @@ describe('Account', function () {
 
   it('should send karma to another account', async function () {
     var initial, initialGiven;
-    this.timeout(4000);
+    this.timeout(8000);
     try {
       var res = await api.get('/api/accounts/setup/2');
         TestCookies = (res.headers['set-cookie'] || ['']).pop().split(';');
@@ -133,7 +134,7 @@ describe('Account', function () {
 
   it('should send karma to another community', async function () {
     var initialSpendable, initialGiven, initialReceived, initialGivable, acct, res;
-    this.timeout(8000);
+    this.timeout(12000);
     try {
       res = await api.get('/api/accounts/setup/6');
         TestCookies = (res.headers['set-cookie'] || ['']).pop().split(';');
@@ -169,7 +170,7 @@ describe('Reward', function () {
 
   // assumes a reward added as part of deploy
   it('should add, get, update, and delete a reward', async function () {
-    this.timeout(6000);
+    this.timeout(8000);
     try {
       var rewardId = 1;
       var initialRewards;
