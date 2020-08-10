@@ -62,10 +62,14 @@ const doSend = function(method, minConfirmations = 1, gasMultiplier = 2) {
 async function getAccountFor(id) {
   return new Promise(async function(resolve, reject) {
     var method = contract.methods.accountForId(id);
+    // util.log("provider", process.env.ETH_PROVIDER);
     util.log("accountForId", id);
     try {
+      // util.log("calling", method);
       let result = await method.call();
+      // util.log("result", result);
       var account = getAccountFromResult(result);
+      // util.log("account", account);
       resolve(account);
     } catch(error) {
       util.debug('getAccountFor error', error);

@@ -12,7 +12,6 @@
     "util": "node ./scripts/util.js"
   },
   "dependencies": {
-    "@sendgrid/mail": "^6.5.5",
     "chai": "^4.2.0",
     "connect-redis": "^3.4.2",
     "cookie-parser": "^1.4.5",

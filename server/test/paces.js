@@ -10,8 +10,22 @@ var TestCookies = [];
 
 describe('Account', function () {
 
+  it('super basic', async function () {
+    this.timeout(3000);
+    try {
+      var res = await api.get('/api/accounts/setup/2');
+        TestCookies = (res.headers['set-cookie'] || ['']).pop().split(';');
+      res = await api.get('/api/accounts/url/test@example.com').set('Cookie', TestCookies);
+        var acct = JSON.parse(res.text);
+        expect(acct.urls).to.equal("mailto:test@example.com");
+        expect(acct.flags).to.equal('0x0000000000000000000000000000000000000000000000000000000000000000');
+    } catch(err) {
+      return console.log("error", err);
+    }
+  });
+
   it('should add a URL to an account, then remove one', async function () {
-    this.timeout(5000);
+    this.timeout(8000);
     try {
       var res = await api.get('/api/accounts/setup/2');
         TestCookies = (res.headers['set-cookie'] || ['']).pop().split(';');

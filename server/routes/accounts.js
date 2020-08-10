@@ -90,7 +90,7 @@ router.get('/full', async function(req, res, next) {
 /* GET account details */
 router.get('/url/:url', async function(req, res, next) {
   var url = req.params.url;
-  if (!req.session.urls.include(url) && !req.session.urls.include(process.env.ADMIN_URL)) {
+  if (!req.session.urls.includes(url) && !req.session.urls.includes(process.env.ADMIN_URL)) {
     util.warn("Not authorized", req.params.url);
     return res.json({"success":false, "error": req.t("Not authorized")});
   }
@@ -170,7 +170,7 @@ router.put('/removeUrl', async function(req, res, next) {
   await blockchain.removeUrlFromExistingAccount(req.session.ykid, url);
   const index = req.session.urls.indexOf(url);
   if (index) {
-    array.splice(index, 1);
+    req.session.urls.splice(index, 1);
   }
   res.json({"success":true});
 });
@@ -183,7 +183,7 @@ router.put('/update', async function(req, res, next) {
   if (account.id === 0) {
     return res.json({"success":false, "error": 'Account ID not set'});
   }
-  if (!req.session.urls.include(process.env.ADMIN_URL) && req.session.ykid !== account.id) {
+  if (!req.session.urls.includes(process.env.ADMIN_URL) && req.session.ykid !== account.id) {
     return res.json({"success":false, "error": req.t("Not authorized")});
   }
   //console.log("About to edit", account);
@@ -199,7 +199,7 @@ router.put('/update', async function(req, res, next) {
 
 /* DELETE remove account. */
 router.delete('/destroy/:id', async function(req, res, next) {
-  if (!req.session.urls.include(process.env.ADMIN_URL)) {
+  if (!req.session.urls.includes(process.env.ADMIN_URL)) {
     return res.json({"success":false, "error": "Admin only"});
   }
   if (req.params.id === 0) {
