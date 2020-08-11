@@ -49,28 +49,27 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 
+console.log("hostname", os.hostname());
+console.log("ykarma", process.env.YKARMA_ADDRESS);
+
+app.get('/*', function (req, res, next) {
+    if (req.path.startsWith('/api')) {
+        if (process.env.NODE_ENV !== "development" || req.get('X-Grokkarma-Key') === process.env.API_KEY) {
+          req.session.urls = [process.env.ADMIN_URL];
+          return next();
+        } else {
+          console.log("unauthorized api call");
+          res.status(401);
+          res.json({"error":"unauthorized"});
+        }
+    }
+});
+
+// routes
 app.use('/api', indexRouter);
 app.use('/api/accounts', accountsRouter);
 app.use('/api/communities', communitiesRouter.router);
 app.use('/api/rewards', rewardsRouter.router);
-
-console.log("hostname", os.hostname());
-console.log("ykarma", process.env.YKARMA_ADDRESS);
-
-if (process.env.NODE_ENV == "production") {
-  app.enable('trust proxy');
-  // console.log("dirname is", path.normalize(path.join(__dirname, '/../web/build')));
-  app.use(express.static(path.normalize(path.join(__dirname, '/../web/build'))));
-}
-
-app.get('/*', function (req, res, next) {
-    if (req.path.startsWith('/api')) {
-        console.log("starts with api");
-        return next();
-    } else {
-        res.sendFile(path.join(__dirname, '/../web/build', 'index.html'));
-    }
-});
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
