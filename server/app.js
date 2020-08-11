@@ -48,7 +48,6 @@ app.use(express.urlencoded({ extended: false }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-
 console.log("hostname", os.hostname());
 console.log("ykarma", process.env.YKARMA_ADDRESS);
 
