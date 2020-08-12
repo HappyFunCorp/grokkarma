@@ -49,6 +49,7 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 console.log("hostname", os.hostname());
+console.log("port", process.env.PORT);
 console.log("ykarma", process.env.YKARMA_ADDRESS);
 
 app.get('/*', function (req, res, next) {
