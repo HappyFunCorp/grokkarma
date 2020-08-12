@@ -3,9 +3,7 @@ services:
   node:
     build: .
     ports:
-      - "80:80"
       - "443:443"
-      - "8080:8080"
     env_file: ./server/.env.production
     volumes:
       - ./server/.env.production:/usr/src/app/server/.env
