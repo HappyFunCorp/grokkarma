@@ -19,11 +19,11 @@ const BYTES_ZERO = '0x0000000000000000000000000000000000000000000000000000000000
 
 module.exports = (deployer, network, accounts) => {
   const owner = accounts[0];
-  var adminEmail = '';
+  var adminUrl = '';
   deployer.then(async () => {
 
     var data = await checkEnvFile();
-    adminEmail = getAdminEmail(data);
+    adminUrl = getAdminUrl(data);
     // if we already have a YKarma, don't deploy
     if (process.env.TRUFFLE_ENV === 'production') {
       if (process.env.YKARMA_ADDRESS) return;
@@ -62,12 +62,12 @@ module.exports = (deployer, network, accounts) => {
     // set up initial values
     console.log("adding test data...")
     await yk.addEditCommunity(0, ADDRESS_ZERO, BYTES_ZERO, 'ykarma.com', '{"name":"Alpha Karma", "description":"An initial test community, probably ephemeral"}', 'alpha,test');
-    await yk.addNewAccount(1, ADDRESS_ZERO, '{"name":"Jon"}', BYTES_ZERO, 'mailto:' + adminEmail);
+    await yk.addNewAccount(1, ADDRESS_ZERO, '{"name":"Jon"}', BYTES_ZERO, adminUrl);
     await yk.replenish(1);
     await yk.addNewAccount(1, ADDRESS_ZERO, '{"name":"Test"}', BYTES_ZERO, 'mailto:test@example.com');
     await yk.addNewAccount(1, ADDRESS_ZERO, '{"name":"Test Two"}', BYTES_ZERO, 'mailto:test2@example.com');
     await yk.replenish(2);
-    await yk.give(2, 1, 'mailto:'+adminEmail, 60, "Just a message");
+    await yk.give(2, 1, adminUrl, 60, "Just a message");
     await yk.give(1, 1, 'mailto:test@example.com', 20, "Another message");
     await yk.addNewAccount(1, ADDRESS_ZERO, '{"name":"Test Three"}', BYTES_ZERO, 'slack:TEAM1-USER1');
     await yk.addNewAccount(1, ADDRESS_ZERO, '{"name":"Test Four"}', BYTES_ZERO, 'slack:TEAM1-USER2');
@@ -98,20 +98,20 @@ function checkEnvFile() {
   });
 }
 
-function getAdminEmail(data) {
-  if (process.env.ADMIN_EMAIL) {
-    console.log("admin email " + process.env.ADMIN_EMAIL);
-    return process.env.ADMIN_EMAIL;
+function getAdminUrl(data) {
+  if (process.env.ADMIN_URL) {
+    console.log("admin url " + process.env.ADMIN_URL);
+    return process.env.ADMIN_URL;
   }
-  var idx = data.indexOf('ADMIN_EMAIL');
+  var idx = data.indexOf('ADMIN_URL');
   if (idx > 0) {
     var start = data.indexOf('=', idx+1);
     var end = data.indexOf('\n', start+1);
     var addr = data.substring(start+1, end);
-    console.log("admin email " + addr);
+    console.log("admin url " + addr);
     return addr;
   }
-  console.log("admin email not found");
+  console.log("admin url not found");
   return "n/a";
 }
 

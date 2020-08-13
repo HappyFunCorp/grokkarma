@@ -48,19 +48,24 @@ app.use(express.urlencoded({ extended: false }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
-console.log("hostname", os.hostname());
-console.log("port", process.env.PORT);
-console.log("ykarma", process.env.YKARMA_ADDRESS);
+console.log('hostname', os.hostname());
+console.log('port', process.env.PORT);
+console.log('env', process.env.NODE_ENV);
+console.log('api key exists:', false || (process.env.API_KEY && process.env.API_KEY.length > 0));
+console.log('ykarma', process.env.YKARMA_ADDRESS);
 
 app.get('/*', function (req, res, next) {
     if (req.path.startsWith('/api')) {
-        if (process.env.NODE_ENV !== "development" || req.get('X-Grokkarma-Key') === process.env.API_KEY) {
+        if (process.env.NODE_ENV === "production") {
+          if (req.get('X-Grokkarma-Key') !== process.env.API_KEY) {
+            console.log('unauthorized api call');
+            res.status(401);
+            return res.json({"error":"unauthorized"});
+          }
           req.session.urls = [process.env.ADMIN_URL];
           return next();
         } else {
-          console.log("unauthorized api call");
-          res.status(401);
-          res.json({"error":"unauthorized"});
+          return next();
         }
     }
 });
