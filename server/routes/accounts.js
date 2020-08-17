@@ -209,6 +209,16 @@ router.put('/update', async function(req, res, next) {
 });
 
 
+/* POST create account. */
+router.post('/create', async function(req, res, next) {
+  if (!isAdmin(req)) {
+    return res.json({"success":false, "error": "Admin only"});
+  }
+  await blockchain.addNewAccount(req.params.communityId, req.params.url);
+  res.json( { "success":true } );
+});
+
+
 /* DELETE remove account. */
 router.delete('/destroy/:id', async function(req, res, next) {
   if (!isAdmin(req)) {
@@ -223,7 +233,21 @@ router.delete('/destroy/:id', async function(req, res, next) {
 
 /* POST give coins */
 router.post('/give', async function(req, res, next) {
-  var recipientUrl = getLongUrlFromShort(req.body.recipient);
+  return doGive(req.session.ykid, req.session.ykcid, req.body.recipient, req, res, next);
+});
+
+/* POST transfer coins */
+router.post('/transfer', async function(req, res, next) {
+  var communityId = req.body.communityId;
+  var senderId = req.body.senderId;
+  var recipientUrl = req.body.recipientUrl;
+  return doGive(senderId, community, recipientUrl, req, res, next);
+});
+
+// TODO clean up this six-arg mess
+async function doGive(id, cid, recipient, req, res, next) {
+
+  var recipientUrl = getLongUrlFromShort(recipient);
   
   //check values
   if (recipientUrl.startsWith('error')) {
@@ -273,7 +297,7 @@ router.post('/give', async function(req, res, next) {
   } catch(error) {
     res.json({"success":false, "error": error});
   }
-});
+}
 
 
 /* POST set token */

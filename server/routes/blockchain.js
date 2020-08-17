@@ -79,6 +79,12 @@ function removeUrlFromExistingAccount(id, url) {
   return eth.doSend(method, 1, 3);
 }
 
+function addNewAccount(communityId, url) {
+  let method = eth.contract.methods.addNewAccount(communityId, util.ADDRESS_ZERO, '{}', util.BYTES_ZERO, url);
+  return eth.doSend(method, 1, 3);
+}
+
+
 function editAccount(id, userAddress, metadata, flags) {
   var method = eth.contract.methods.editAccount(id, userAddress, metadata, flags);
   return eth.doSend(method);
@@ -173,6 +179,7 @@ module.exports = {
     tranchesReceivedForId,
     addUrlToExistingAccount,
     removeUrlFromExistingAccount,
+    addNewAccount,
     editAccount,
     deleteAccount,
     give,
