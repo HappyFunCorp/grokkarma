@@ -22,7 +22,7 @@ router.get('/setup/:ykid', async function(req, res, next) {
 router.get('/account/:id', async function(req, res, next) {
   try {
     let account = await blockchain.getAccountFor(req.params.id);
-    if (!req.session.urls.includes(process.env.ADMIN_URL) && req.session.ykid !== id && req.session.ykcid != account.communityIds[0]) {
+    if (!isAdmin(req) && req.session.ykid !== id && req.session.ykcid != account.communityIds[0]) {
       util.warn('Unauthorized account request', req.session);
       return res.json({"success":false, "error": req.t("Not authorized")});
     }
@@ -69,12 +69,24 @@ router.get('/me', async function(req, res, next) {
   }
 });
 
-router.get('/full', async function(req, res, next) {
+router.get('/full', function(req, res, next) {
+  return getFull(req.session.ykid, req, res, next);
+});
+
+router.get('/full/:id', function(req, res, next) {
+  if (!isAdmin(req)) {
+    util.warn("Not authorized", req.params.id);
+    return res.json({"success":false, "error": req.t("Not authorized")});
+  }
+  return getFull(req.params.id, req, res, next);
+});
+
+async function getFull(id, req, res, next) {
   try {
-    let totals = await blockchain.trancheTotalsForId(req.session.ykid);
+    let totals = await blockchain.trancheTotalsForId(id);
     // possibly eventually page these
-    let given = await blockchain.tranchesGivenForId(req.session.ykid, totals[0]);
-    let received = await blockchain.tranchesReceivedForId(req.session.ykid, totals[1]);
+    let given = await blockchain.tranchesGivenForId(id, totals[0]);
+    let received = await blockchain.tranchesReceivedForId(id, totals[1]);
     var account = req.session.account;
     account.given = JSON.parse(given);
     account.received = JSON.parse(received);
@@ -85,12 +97,12 @@ router.get('/full', async function(req, res, next) {
     util.warn("error getting full profile", error);
     res.json(req.session.account);
   }
-});
+}
 
 /* GET account details */
 router.get('/url/:url', async function(req, res, next) {
   var url = req.params.url;
-  if (!req.session.urls.includes(url) && !req.session.urls.includes(process.env.ADMIN_URL)) {
+  if (!req.session.urls.includes(url) && !isAdmin(req)) {
     util.warn("Not authorized", req.params.url);
     return res.json({"success":false, "error": req.t("Not authorized")});
   }
@@ -183,7 +195,7 @@ router.put('/update', async function(req, res, next) {
   if (account.id === 0) {
     return res.json({"success":false, "error": 'Account ID not set'});
   }
-  if (!req.session.urls.includes(process.env.ADMIN_URL) && req.session.ykid !== account.id) {
+  if (!isAdmin(req) && req.session.ykid !== account.id) {
     return res.json({"success":false, "error": req.t("Not authorized")});
   }
   //console.log("About to edit", account);
@@ -199,7 +211,7 @@ router.put('/update', async function(req, res, next) {
 
 /* DELETE remove account. */
 router.delete('/destroy/:id', async function(req, res, next) {
-  if (!req.session.urls.includes(process.env.ADMIN_URL)) {
+  if (!isAdmin(req)) {
     return res.json({"success":false, "error": "Admin only"});
   }
   if (req.params.id === 0) {
@@ -282,6 +294,10 @@ router.post('/token/set', function(req, res, next) {
   res.json({"success":true});
 });
 
+
+function isAdmin(req) {
+  return req.session.urls && req.session.urls.includes(process.env.ADMIN_URL);
+}
 
 function hydrateAccount(account) {
   if (account.given.length===0 && account.received.length===0) {
