@@ -100,6 +100,7 @@ router.post('/create', async function(req, res, next) {
     return res.json({'success':false, 'error':'Specify next community ID'});
   }
 
+  util.log("adding community");
   var tags = community.tags || '';
   for (var i = 0; i < RESERVED_TAGS.length; i++) {
     tags = tags.replace(RESERVED_TAGS[i],"");
@@ -114,10 +115,10 @@ router.post('/create', async function(req, res, next) {
       JSON.stringify(community.metadata),
       tags,
     );
-    res.json({'success':true, 'result':result});
+    return res.json({'success':true, 'result':result});
   }
   catch(error) {
-    res.json({"success":false, "error": error});
+    return res.json({"success":false, "error": error});
   }
 });
 
