@@ -54,7 +54,7 @@ console.log('env', process.env.NODE_ENV);
 console.log('api key exists:', false || (process.env.API_KEY && process.env.API_KEY.length > 0));
 console.log('ykarma', process.env.YKARMA_ADDRESS);
 
-app.get('/*', function (req, res, next) {
+app.use(function (req, res, next) {
     if (req.path.startsWith('/api')) {
         if (process.env.NODE_ENV === "production") {
           if (req.get('X-Grokkarma-Key') !== process.env.API_KEY) {
