@@ -14,11 +14,30 @@ describe('Account', function () {
     this.timeout(3000);
     try {
       var res = await api.get('/api/accounts/setup/2');
-        TestCookies = (res.headers['set-cookie'] || ['']).pop().split(';');
+      TestCookies = (res.headers['set-cookie'] || ['']).pop().split(';');
       res = await api.get('/api/accounts/url/test@example.com').set('Cookie', TestCookies);
-        var acct = JSON.parse(res.text);
-        expect(acct.urls).to.equal("mailto:test@example.com");
-        expect(acct.flags).to.equal('0x0000000000000000000000000000000000000000000000000000000000000000');
+      var acct = JSON.parse(res.text);
+      expect(acct.urls).to.equal("mailto:test@example.com");
+      expect(acct.flags).to.equal('0x0000000000000000000000000000000000000000000000000000000000000000');
+    } catch(err) {
+      return console.log("error", err);
+    }
+  });
+
+  it('create and transfer', async function () {
+    this.timeout(8000);
+    try {
+      var res = await api.get('/api/accounts/setup/2');
+      TestCookies = (res.headers['set-cookie'] || ['']).pop().split(';');
+      res = await api.post('/api/accounts/create').set('Cookie', TestCookies)
+        .send({'communityId':1, 'url':'mailto:testcreate@example.com'});
+      expect(JSON.parse(res.text).success).to.equal(true);
+      res = await api.post('/api/accounts/transfer').set('Cookie', TestCookies)
+        .send({'senderId':2, 'communityId':1, 'recipientUrl':'mailto:testcreate@example.com'});
+      expect(JSON.parse(res.text).success).to.equal(true);
+      res = await api.get('/api/accounts/url/testcreate@example.com').set('Cookie', TestCookies);
+      var acct = JSON.parse(res.text);
+      expect(acct.urls).to.equal("mailto:testcreate@example.com");
     } catch(err) {
       return console.log("error", err);
     }

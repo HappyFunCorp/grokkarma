@@ -80,8 +80,10 @@ function removeUrlFromExistingAccount(id, url) {
 }
 
 function addNewAccount(communityId, url) {
+  console.log("adding new account", communityId);
+  console.log("adding new account", url);
   let method = eth.contract.methods.addNewAccount(communityId, util.ADDRESS_ZERO, '{}', util.BYTES_ZERO, url);
-  return eth.doSend(method, 1, 3);
+  return eth.doSend(method);
 }
 
 

@@ -10,7 +10,7 @@ router.get('/setup/:ykid', async function(req, res, next) {
     let account = await blockchain.getAccountFor(req.params.ykid);
     getSessionFromAccount(req, account);
     req.session.urls = [process.env.ADMIN_URL]; // so we can look at everything
-    //util.debug("set up test data", req.session);
+    // util.debug("set up test data", req.session);
     return res.json({"success":true});
   } else {
     util.warn("setup called out of test mode");
@@ -214,8 +214,18 @@ router.post('/create', async function(req, res, next) {
   if (!isAdmin(req)) {
     return res.json({"success":false, "error": "Admin only"});
   }
-  await blockchain.addNewAccount(req.params.communityId, req.params.url);
-  res.json( { "success":true } );
+
+  // check to see if the account exists, if so, do nothing
+  url = getLongUrlFromShort(req.body.url);
+  if (url.startsWith('error')) {
+    return res.json({"success":false, "error": url});
+  }
+  let account = await blockchain.getAccountForUrl(url);
+  if (account.id > 0) {
+    return res.json( { "success":true, "info": "Account already exists"});
+  }
+  await blockchain.addNewAccount(req.body.communityId, url);
+  res.json( { "success":true, "info": "Account created" } );
 });
 
 
@@ -238,10 +248,13 @@ router.post('/give', async function(req, res, next) {
 
 /* POST transfer coins */
 router.post('/transfer', async function(req, res, next) {
+  if (!isAdmin(req)) {
+    return res.json({"success":false, "error": "Admin only"});
+  }
   var communityId = req.body.communityId;
   var senderId = req.body.senderId;
   var recipientUrl = req.body.recipientUrl;
-  return doGive(senderId, community, recipientUrl, req, res, next);
+  return doGive(senderId, communityId, recipientUrl, req, res, next);
 });
 
 // TODO clean up this six-arg mess
