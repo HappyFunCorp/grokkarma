@@ -229,6 +229,25 @@ router.post('/create', async function(req, res, next) {
 });
 
 
+/* POST replenish account. */
+/* Note that replenish limits are enforced at the blockchain level. */
+router.post('/replenish', async function(req, res, next) {
+  if (!isAdmin(req)) {
+    return res.json({"success":false, "error": "Admin only"});
+  }
+  try {
+    let shouldReplenish = await blockchain.shouldReplenish(req.body.id);
+    if (shouldReplenish) {
+      util.log("replenishing", req.body.id);
+      await blockchain.replenishAccount(req.body.id);
+    }
+    return res.json({"success":true, "replenished": shouldReplenish, "id":req.body.id});
+  } catch(error) {
+    return res.json({"success":false, "error": error});
+  }
+});
+
+
 /* DELETE remove account. */
 router.delete('/destroy/:id', async function(req, res, next) {
   if (!isAdmin(req)) {
@@ -247,6 +266,7 @@ router.post('/give', async function(req, res, next) {
   return doGive(vals, req, res, next);
 });
 
+
 /* POST transfer coins */
 router.post('/transfer', async function(req, res, next) {
   if (!isAdmin(req)) {
@@ -256,10 +276,8 @@ router.post('/transfer', async function(req, res, next) {
 });
 
 async function doGive(vals, req, res, next) {
-
-  var recipientUrl = getLongUrlFromShort(vals.recipient);
-  
   //check values
+  var recipientUrl = getLongUrlFromShort(vals.recipient);
   if (recipientUrl.startsWith('error')) {
     return res.json({"success":false, "error": recipientUrl});
   }
@@ -281,9 +299,9 @@ async function doGive(vals, req, res, next) {
     // perform the txn
     await blockchain.give(vals.ykid, vals.ykcid, recipientUrl,vals.amount, vals.message);
     util.log(`${vals.amount} karma sent to`, recipientUrl);
-    res.json( { "success":true } );
+    return res.json( { "success":true } );
   } catch(error) {
-    res.json({"success":false, "error": error});
+    return res.json({"success":false, "error": error});
   }
 }
 

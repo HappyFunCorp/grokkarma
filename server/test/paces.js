@@ -24,11 +24,13 @@ describe('Account', function () {
     }
   });
 
-  it('create and transfer', async function () {
+  it('create, replenish, transfer', async function () {
     this.timeout(8000);
     try {
       var res = await api.get('/api/accounts/setup/2');
       TestCookies = (res.headers['set-cookie'] || ['']).pop().split(';');
+      res = await api.post('/api/accounts/replenish').set('Cookie', TestCookies).send({'id':2});
+      expect(JSON.parse(res.text).success).to.equal(true);
       res = await api.post('/api/accounts/create').set('Cookie', TestCookies)
         .send({'communityId':1, 'url':'mailto:testcreate@example.com'});
       expect(JSON.parse(res.text).success).to.equal(true);

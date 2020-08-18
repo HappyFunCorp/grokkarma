@@ -49,6 +49,14 @@ function markAccountActive(account) {
   return eth.doSend(method, 1, 2);
 }
 
+const REFRESH_WINDOW = 20 * 60 * 24 * 7;
+async function shouldReplenish(id) {
+  let blockNumber = await eth.web3.eth.getBlockNumber();
+  let lastReplenished = eth.contract.methods.lastReplenished(id);
+  let latest = await lastReplenished.call();
+  return latest > 0 && blockNumber - latest < REFRESH_WINDOW;
+}
+
 function replenishAccount(id) {
   method = eth.contract.methods.replenish(id);
   return eth.doSend(method, 1, 2);
@@ -80,8 +88,6 @@ function removeUrlFromExistingAccount(id, url) {
 }
 
 function addNewAccount(communityId, url) {
-  console.log("adding new account", communityId);
-  console.log("adding new account", url);
   let method = eth.contract.methods.addNewAccount(communityId, util.ADDRESS_ZERO, '{}', util.BYTES_ZERO, url);
   return eth.doSend(method);
 }
@@ -175,6 +181,7 @@ module.exports = {
     getAccountForUrl,
     availableToSpend,
     markAccountActive,
+    shouldReplenish,
     replenishAccount,
     trancheTotalsForId,
     tranchesGivenForId,
