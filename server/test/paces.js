@@ -33,7 +33,7 @@ describe('Account', function () {
         .send({'communityId':1, 'url':'mailto:testcreate@example.com'});
       expect(JSON.parse(res.text).success).to.equal(true);
       res = await api.post('/api/accounts/transfer').set('Cookie', TestCookies)
-        .send({'senderId':2, 'communityId':1, 'recipientUrl':'mailto:testcreate@example.com'});
+        .send({'ykid':2, 'ykcid':1, 'amount':1, 'message':'hi', 'recipient':'mailto:testcreate@example.com'});
       expect(JSON.parse(res.text).success).to.equal(true);
       res = await api.get('/api/accounts/url/testcreate@example.com').set('Cookie', TestCookies);
       var acct = JSON.parse(res.text);

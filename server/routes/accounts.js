@@ -243,7 +243,8 @@ router.delete('/destroy/:id', async function(req, res, next) {
 
 /* POST give coins */
 router.post('/give', async function(req, res, next) {
-  return doGive(req.session.ykid, req.session.ykcid, req.body.recipient, req, res, next);
+  vals = {...req.body, ykid:req.session.ykid, ykcid:req.session.ykcid};
+  return doGive(vals, req, res, next);
 });
 
 /* POST transfer coins */
@@ -251,28 +252,24 @@ router.post('/transfer', async function(req, res, next) {
   if (!isAdmin(req)) {
     return res.json({"success":false, "error": "Admin only"});
   }
-  var communityId = req.body.communityId;
-  var senderId = req.body.senderId;
-  var recipientUrl = req.body.recipientUrl;
-  return doGive(senderId, communityId, recipientUrl, req, res, next);
+  return doGive(req.body, req, res, next);
 });
 
-// TODO clean up this six-arg mess
-async function doGive(id, cid, recipient, req, res, next) {
+async function doGive(vals, req, res, next) {
 
-  var recipientUrl = getLongUrlFromShort(recipient);
+  var recipientUrl = getLongUrlFromShort(vals.recipient);
   
   //check values
   if (recipientUrl.startsWith('error')) {
     return res.json({"success":false, "error": recipientUrl});
   }
-  if (parseInt(req.body.amount) === 0) {
+  if (parseInt(vals.amount) === 0) {
     return res.json({"success":false, "error": "recipientUrl"});
   }
   
   try {
     //check community values
-    let community = await blockchain.getCommunityFor(req.session.ykcid); 
+    let community = await blockchain.getCommunityFor(vals.ykcid); 
     if (isStrictCommunity(community)) {
       if (recipientUrl.startsWith("https://twitter.com/")) {
         return res.json({"success":false, "error": req.t('Closed community, can only give to') +` @${community.domain}` });
@@ -281,31 +278,9 @@ async function doGive(id, cid, recipient, req, res, next) {
         return res.json({"success":false, "error": req.t('Closed community, can only give to') +` @${community.domain}` });
       }
     }
-    
     // perform the txn
-    await blockchain.give(req.session.ykid, req.session.ykcid, recipientUrl, req.body.amount, req.body.message);
-    util.log(`${req.body.amount} karma sent to`, recipientUrl);
-  
-    // send notifications as appropriate
-    if (!recipientUrl.startsWith("mailto:")) {
-      // TODO: Twitter notifications
-      return res.json( { "success":true } );
-    }
-    var account = req.session.account || {};
-    account.metadata = account.metadata || {};
-    let recipient = await blockchain.getAccountForUrl(recipientUrl);
-    // util.debug("recipient", recipient);
-    // util.debug("hasNeverLoggedIn", ""+hasNeverLoggedIn(recipient));
-    return res.json( { "success":true } );
-
-    util.log("updating metadata", account.metadata);
-    await blockchain.editAccount(
-      account.id,
-      account.userAddress,
-      JSON.stringify(account.metadata),
-      account.flags
-    );
-    util.log("updated metadata", account.metadata);
+    await blockchain.give(vals.ykid, vals.ykcid, recipientUrl,vals.amount, vals.message);
+    util.log(`${vals.amount} karma sent to`, recipientUrl);
     res.json( { "success":true } );
   } catch(error) {
     res.json({"success":false, "error": error});
