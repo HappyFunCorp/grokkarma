@@ -90,15 +90,16 @@ router.post('/create', async function(req, res, next) {
   var community = req.body.community;
   community.flags = community.strict ? '0x0000000000000000000000000000000000000000000000000000000000000001' : util.BYTES_ZERO;
   util.log("community", JSON.stringify(community));
+
+  // idempotency
   if (!community.id) {
-    return res.json({'success':false, 'error':'Specify community ID'});
+    return res.json({'success':false, 'error':'Specify new community ID'});
   }
-  if (community.id !== 0) {
-    let existing = await blockchain.getCommunityFor(id); 
-    if (existing.id !== 0) {
-      return res.json({'success':false, 'error':'Community already exists'});
-    }
+  let communityCount = await blockchain.getCommunityCount();
+  if (community.id !== communityCount+1) {
+    return res.json({'success':false, 'error':'Specify next community ID'});
   }
+
   var tags = community.tags || '';
   for (var i = 0; i < RESERVED_TAGS.length; i++) {
     tags = tags.replace(RESERVED_TAGS[i],"");
