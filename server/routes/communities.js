@@ -96,7 +96,8 @@ router.post('/create', async function(req, res, next) {
     return res.json({'success':false, 'error':'Specify new community ID'});
   }
   let communityCount = await blockchain.getCommunityCount();
-  if (community.id !== communityCount+1) {
+  util.log("community count", communityCount);
+  if (community.id != communityCount+1) {
     return res.json({'success':false, 'error':'Specify next community ID'});
   }
 
