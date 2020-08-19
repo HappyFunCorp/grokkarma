@@ -54,7 +54,7 @@ async function shouldReplenish(id) {
   let blockNumber = await eth.web3.eth.getBlockNumber();
   let lastReplenished = eth.contract.methods.lastReplenished(id);
   let latest = await lastReplenished.call();
-  return latest > 0 && blockNumber - latest < REFRESH_WINDOW;
+  return latest == 0 || blockNumber - latest > REFRESH_WINDOW;
 }
 
 function replenishAccount(id) {
