@@ -118,7 +118,7 @@ router.get('/url/:url', async function(req, res, next) {
   }
 });
 
-/* PUT replenish */
+/* PUT switchCommunity */
 router.put('/switchCommunity', async function(req, res, next) {
   let idx = parseInt(req.body.index || 0);
   console.log("ykcid in", req.session.ykcid);
@@ -228,6 +228,23 @@ router.post('/create', async function(req, res, next) {
   res.json( { "success":true, "info": "Account created" } );
 });
 
+
+/* POST mark account active. */
+router.post('/markActive', async function(req, res, next) {
+  if (!isAdmin(req)) {
+    return res.json({"success":false, "error": "Admin only"});
+  }
+  try {
+    let account = await blockchain.getAccountForUrl(req.body.url);
+    if (!account.id) {
+      return res.json({"success":false, "error": "Account not found"});
+    }
+    await blockchain.markAccountActive(account);
+    return res.json({"success":true});
+  } catch(error) {
+    return res.json({"success":false, "error": error});
+  }
+});
 
 /* POST replenish account. */
 /* Note that replenish limits are enforced at the blockchain level. */
