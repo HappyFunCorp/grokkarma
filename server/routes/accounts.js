@@ -253,12 +253,17 @@ router.post('/replenish', async function(req, res, next) {
     return res.json({"success":false, "error": "Admin only"});
   }
   try {
-    let shouldReplenish = await blockchain.shouldReplenish(req.body.id);
-    if (shouldReplenish) {
-      util.log("replenishing", req.body.id);
-      await blockchain.replenishAccount(req.body.id);
+    var id = req.body.id;
+    if (!id) {
+      let account = await blockchain.getAccountForUrl(req.body.url);
+      id = account.id;
     }
-    return res.json({"success":true, "replenished": shouldReplenish, "id":req.body.id});
+    let shouldReplenish = await blockchain.shouldReplenish(id);
+    if (shouldReplenish) {
+      util.log("replenishing", req.body);
+      await blockchain.replenishAccount(id);
+    }
+    return res.json( { "success":true, "replenished": shouldReplenish, "id":id } );
   } catch(error) {
     return res.json({"success":false, "error": error});
   }
