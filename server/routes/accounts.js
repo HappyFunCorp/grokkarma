@@ -255,6 +255,7 @@ router.post('/replenish', async function(req, res, next) {
   try {
     var id = req.body.id;
     if (!id) {
+      util.log("getting id from url");
       let account = await blockchain.getAccountForUrl(req.body.url);
       id = account.id;
     }
@@ -263,6 +264,7 @@ router.post('/replenish', async function(req, res, next) {
       util.log("replenishing", req.body);
       await blockchain.replenishAccount(id);
       await blockchain.recalculateBalances(id);
+      util.log("replenished", id);
     }
     return res.json( { "success":true, "replenish": replenishStatus, "id":id } );
   } catch(error) {
