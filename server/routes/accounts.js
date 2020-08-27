@@ -102,6 +102,7 @@ async function getFull(id, req, res, next) {
 /* GET account details */
 router.get('/url/:url', async function(req, res, next) {
   var url = req.params.url;
+  util.log("getting details for", url);
   if (!req.session.urls.includes(url) && !isAdmin(req)) {
     util.warn("Not authorized", req.params.url);
     return res.json({"success":false, "error": req.t("Not authorized")});
@@ -255,9 +256,9 @@ router.post('/replenish', async function(req, res, next) {
   try {
     var id = req.body.id;
     if (!id) {
-      util.log("getting id from url");
       let account = await blockchain.getAccountForUrl(req.body.url);
       id = account.id;
+      util.log("got id from url", id);
     }
     let replenishStatus = await blockchain.replenishStatus(id);
     if (replenishStatus.shouldReplenish) {

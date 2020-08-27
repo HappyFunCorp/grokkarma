@@ -54,9 +54,6 @@ async function replenishStatus(id) {
   let blockNumber = await eth.web3.eth.getBlockNumber();
   let lastReplenished = eth.contract.methods.lastReplenished(id);
   let latest = await lastReplenished.call();
-  let availableToGive = eth.contract.methods.availableToGive(id);
-  let available = await availableToGive.call();
-  console.log("available", available);
   return {
     blockNumber: blockNumber,
     lastReplenished: latest,
