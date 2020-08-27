@@ -258,12 +258,12 @@ router.post('/replenish', async function(req, res, next) {
       let account = await blockchain.getAccountForUrl(req.body.url);
       id = account.id;
     }
-    let shouldReplenish = await blockchain.shouldReplenish(id);
-    if (shouldReplenish) {
+    let replenishStatus = await blockchain.replenishStatus(id);
+    if (replenishStatus.shouldReplenish) {
       util.log("replenishing", req.body);
       await blockchain.replenishAccount(id);
     }
-    return res.json( { "success":true, "replenished": shouldReplenish, "id":id } );
+    return res.json( { "success":true, "replenish": replenishStatus, "id":id } );
   } catch(error) {
     return res.json({"success":false, "error": error});
   }
