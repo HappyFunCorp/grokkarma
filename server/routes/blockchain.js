@@ -63,12 +63,7 @@ async function replenishStatus(id) {
 
 function replenishAccount(id) {
   method = eth.contract.methods.replenish(id);
-  return eth.doSend(method, 1, 4);
-}
-
-function recalculateBalances(id) {
-  method = eth.contract.methods.recalculateBalances(id);
-  return eth.doSend(method, 1, 4);
+  return eth.doSend(method, 1, 2);
 }
 
 function trancheTotalsForId(id) {
@@ -100,6 +95,7 @@ function addNewAccount(communityId, url) {
   let method = eth.contract.methods.addNewAccount(communityId, util.ADDRESS_ZERO, '{}', util.BYTES_ZERO, url);
   return eth.doSend(method);
 }
+
 
 function editAccount(id, userAddress, metadata, flags) {
   var method = eth.contract.methods.editAccount(id, userAddress, metadata, flags);
@@ -189,7 +185,6 @@ module.exports = {
     getAccountForUrl,
     availableToSpend,
     markAccountActive,
-    recalculateBalances,
     replenishStatus,
     replenishAccount,
     trancheTotalsForId,
