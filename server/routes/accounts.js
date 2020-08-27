@@ -239,6 +239,7 @@ router.post('/markActive', async function(req, res, next) {
     if (!account.id) {
       return res.json({"success":false, "error": "Account not found"});
     }
+    await blockchain.loadModeOff();
     await blockchain.markAccountActive(account);
     return res.json({"success":true});
   } catch(error) {

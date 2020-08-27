@@ -179,6 +179,11 @@ function purchase(userId, rewardId) {
   return eth.doSend(method);
 }
 
+function loadModeOff() {
+  method = eth.contract.methods.loadModeOff();
+  return eth.doSend(method, 1, 2);
+}
+
 module.exports = {
     getAccountFor,
     getCommunityFor,
@@ -208,5 +213,6 @@ module.exports = {
     deleteReward,
     rewardForId,
     rewardByIdx,
-    purchase
+    purchase,
+    loadModeOff
 };
