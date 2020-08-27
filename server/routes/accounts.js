@@ -262,6 +262,7 @@ router.post('/replenish', async function(req, res, next) {
     if (replenishStatus.shouldReplenish) {
       util.log("replenishing", req.body);
       await blockchain.replenishAccount(id);
+      await blockchain.recalculateBalances(id);
     }
     return res.json( { "success":true, "replenish": replenishStatus, "id":id } );
   } catch(error) {
