@@ -63,12 +63,12 @@ async function replenishStatus(id) {
 
 function replenishAccount(id) {
   method = eth.contract.methods.replenish(id);
-  return eth.doSend(method, 1, 2);
+  return eth.doSend(method, 1, 4);
 }
 
 function recalculateBalances(id) {
   method = eth.contract.methods.recalculateBalances(id);
-  return eth.doSend(method, 1, 2);
+  return eth.doSend(method, 1, 4);
 }
 
 function trancheTotalsForId(id) {
